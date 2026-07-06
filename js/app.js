@@ -587,7 +587,16 @@
   function wireSessionList(c) {
     qsa("[data-sact]").forEach(function (btn) {
       var act = btn.getAttribute("data-sact"), id = btn.getAttribute("data-id");
-      if (act === "edit") btn.addEventListener("click", function () { state.editingSessionId = id; renderInput(); });
+      if (act === "edit") btn.addEventListener("click", function () {
+        state.editingSessionId = id; renderInput();
+        // 編集フォームは画面上部に再描画される。一覧（画面下部）の「編集」から入ると
+        // フォームが画面外のままになり「開かない＝編集できない」ように見えるため、
+        // route() と同様にフォームを見える位置へスクロールする。
+        var anchor = qs("[data-act='save']") || qs("[data-act='cancel']");
+        var panel = (anchor && anchor.closest) ? anchor.closest(".panel") : null;
+        if (panel && panel.scrollIntoView) panel.scrollIntoView({ block: "start" });
+        else window.scrollTo(0, 0);
+      });
       if (act === "del") btn.addEventListener("click", function () {
         if (!confirm("このセッションを削除します。よろしいですか？")) return;
         if (!Store.deleteSession(c.id, id)) { flash("err", STORE_FAIL_MSG); return renderInput(); }   // 保存失敗（SPEC §13.5-2）
